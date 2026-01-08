@@ -6,6 +6,27 @@ BookVision transforms book pages into thematic illustrations by combining optica
 
 ---
 
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Architecture Overview](#architecture-overview)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Component Documentation](#component-documentation)
+  - [OCR Module](#1-ocr-module-toolsocrpy)
+  - [Book Context Module](#2-book-context-module-toolsweb_searchpy)
+  - [Summarizer Module](#3-summarizer-module-toolssummarizerpy)
+  - [Evaluation Module](#4-evaluation-module-evaluationevaluationpy)
+  - [Prompt Generator](#5-prompt-generator-toolsprompt_generatorpy)
+  - [Image Generator](#6-image-generator-toolsimage_genpy)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Configuration](#configuration)
+- [Dependencies](#dependencies)
+
+---
+
 ## Key Features
 
 - **Multimodal Input Processing**: Accepts book page images and extracts text using confidence-scored OCR
