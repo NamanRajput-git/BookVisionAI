@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+langchain
+langchain-community
+langchain-google-genai
+python-dotenv
+pytesseract
+opencv-python
+Pillow
+requests
+streamlit
+duckduckgo-search
