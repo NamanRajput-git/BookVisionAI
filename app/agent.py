@@ -36,7 +36,7 @@ def run_agent(image_path: str, book_name: str, author_name: str = ""):
         image=lambda x: generate_image(x["image_prompt"])
     )
     
-    # Compose the full chain
+    # Full chain
     agent_chain = step1_loader | step2_summarizer | step3_processing | step4_generation
     
     # Execute
