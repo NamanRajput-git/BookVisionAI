@@ -50,7 +50,7 @@ def summarize_page(ocr_text: str) -> str:
 Provide your structured analysis:"""
                 }
             ],
-            model="HuggingFaceH4/zephyr-7b-beta",
+            model="mistralai/Mistral-7B-Instruct-v0.3",
             max_tokens=800,
             temperature=0.4
         )

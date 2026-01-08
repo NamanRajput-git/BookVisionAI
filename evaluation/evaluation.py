@@ -43,7 +43,7 @@ Respond ONLY with valid JSON in this exact format:
                     "content": prompt
                 }
             ],
-            model="HuggingFaceH4/zephyr-7b-beta",
+            model="mistralai/Mistral-7B-Instruct-v0.3",
             max_tokens=100,
             temperature=0.1
         )
