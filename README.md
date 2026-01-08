@@ -9,6 +9,8 @@ BookVision transforms book pages into thematic illustrations by combining optica
 ## Preview
 
 ![BookVision AI Interface](assets/ui_screenshot.png)
+![BookVision AI Interface](assets/Screenshot 2026-01-08 135922.png)
+![BookVision AI Interface](assets/Screenshot 2026-01-08 135940.png)
 
 ---
 
