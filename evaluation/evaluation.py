@@ -43,7 +43,7 @@ Respond ONLY with valid JSON in this exact format:
                     "content": prompt
                 }
             ],
-            model="mistralai/Mistral-7B-Instruct-v0.3",
+            model="google/gemma-2-2b-it",
             max_tokens=100,
             temperature=0.1
         )

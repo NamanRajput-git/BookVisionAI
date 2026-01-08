@@ -89,7 +89,7 @@ SCENE TO ILLUSTRATE:
 Generate a detailed, visual prompt that captures the essence of this scene while staying true to the book's era and theme."""
                 }
             ],
-            model="mistralai/Mistral-7B-Instruct-v0.3",
+            model="google/gemma-2-2b-it",
             max_tokens=400,
             temperature=0.5
         )
