@@ -290,17 +290,6 @@ If LLM refinement fails, the system uses a template-based prompt combining:
 
 ---
 
-### 6. Image Generator (`tools/image_gen.py`)
-
-Generates illustrations using Stable Diffusion XL via HuggingFace Inference API.
-
-**Model:** `stabilityai/stable-diffusion-xl-base-1.0`
-
-**Output:** High-resolution PNG image returned as bytes
-
-**Error Handling:** Returns empty bytes on failure, allowing graceful UI degradation
-
----
 
 ### 6. Image Generator (`tools/image_gen.py`)
 
