@@ -101,9 +101,9 @@ BookVision transforms book pages into thematic illustrations by combining optica
 | Backend | FastAPI + Uvicorn | Async REST API server handling pipeline orchestration |
 | OCR | Tesseract + OpenCV | Text extraction from book page images with confidence scoring |
 | Book Metadata | Open Library API | Retrieves author, genre, era, and book descriptions |
-| Summarization | HuggingFace Zephyr-7B | Extracts visual elements and narrative from text |
-| Evaluation | HuggingFace Zephyr-7B | Scores summary faithfulness, detects hallucinations |
-| Prompt Engineering | HuggingFace Zephyr-7B | Refines scene descriptions into era-appropriate prompts |
+| Summarization | Google Gemma-2-2B | Extracts visual elements and narrative from text |
+| Evaluation | Google Gemma-2-2B | Scores summary faithfulness, detects hallucinations |
+| Prompt Engineering | Google Gemma-2-2B | Refines scene descriptions into era-appropriate prompts |
 | Image Generation | Stable Diffusion XL | Produces high-quality book illustrations |
 
 ---
@@ -170,7 +170,7 @@ Retrieves book metadata from Open Library API for context-aware generation.
 
 ### 3. Summarizer Module (`tools/summarizer.py`)
 
-Analyzes OCR text to extract structured visual elements using Zephyr-7B LLM.
+Analyzes OCR text to extract structured visual elements using Google Gemma-2-2B LLM.
 
 **Extracted Elements:**
 - **Scene Description:** 2-3 sentence narrative of what is happening
@@ -253,7 +253,7 @@ Maps publication year to historically appropriate artistic styles:
 
 #### Step 3: LLM Prompt Refinement
 
-The Zephyr-7B model acts as an art director, receiving:
+The Gemma-2-2B model acts as an art director, receiving:
 - Scene summary from the summarizer
 - Book metadata (title, author, year, genre)
 - Recommended era style

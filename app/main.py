@@ -45,7 +45,8 @@ async def process_page(
             "book_context": result["book_context"],
             "summary": result["summary"],
             "image_prompt": result["image_prompt"],
-            "image": image_b64
+            "image": image_b64,
+            "evaluation": result["evaluation"]
         }
     except Exception as e:
         error_msg = f"Server Error: {str(e)}\n{traceback.format_exc()}"
