@@ -290,7 +290,7 @@ Generates illustrations using Stable Diffusion XL via HuggingFace Inference API.
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/NamanRajput-git/BookVisionAI.git
 cd BOOKVISION
 ```
 
