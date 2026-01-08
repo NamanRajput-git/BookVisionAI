@@ -1,7 +1,10 @@
 import streamlit as st
 import requests
 import base64
+import os
 
+# Backend URL - configure via environment variable for deployment
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 # Page configuration
 st.set_page_config(
     page_title="BookVision AI",
@@ -232,7 +235,7 @@ if generate_btn and image is not None:
             params = {"book_name": book, "author_name": author}
             
             r = requests.post(
-                "http://localhost:8000/process-page/",
+                f"{BACKEND_URL}/process-page/",
                 params=params,
                 files=files,
                 timeout=120
@@ -300,12 +303,3 @@ if generate_btn and image is not None:
 
 elif generate_btn and image is None:
     st.warning("Please upload an image first.")
-
-# Footer
-st.markdown("---")
-st.markdown(
-    "<p style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.85rem;'>"
-    "Powered by OCR, Open Library, and Stable Diffusion XL"
-    "</p>",
-    unsafe_allow_html=True
-)
