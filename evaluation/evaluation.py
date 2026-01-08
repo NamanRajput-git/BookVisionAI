@@ -1,26 +1,14 @@
-from huggingface_hub import InferenceClient
-import os
+from tools.llm import get_llm
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 import json
-from dotenv import load_dotenv
-
-load_dotenv()
-
-HF_API_KEY = os.getenv("HF_API_KEY")
-client = InferenceClient(token=HF_API_KEY)
-
 
 def evaluate_summary(ocr_text: str, summary: str) -> dict:
     """
     Evaluate the faithfulness of a summary against the original OCR text.
     Returns a dict with faithfulness_score (1-5) and hallucination (bool).
     """
-    prompt = f"""You are an evaluation assistant. Compare the original OCR text with the generated summary.
-
-ORIGINAL OCR TEXT:
-{ocr_text}
-
-GENERATED SUMMARY:
-{summary}
+    system_msg = """You are an evaluation assistant. Compare the original OCR text with the generated summary.
 
 Evaluate:
 1. Faithfulness Score (1-5): How accurately does the summary reflect the original text?
@@ -33,22 +21,28 @@ Evaluate:
 2. Hallucination: Does the summary contain information NOT present in the original text?
 
 Respond ONLY with valid JSON in this exact format:
-{{"faithfulness_score": <int 1-5>, "hallucination": <true/false>}}"""
+{"faithfulness_score": <int 1-5>, "hallucination": <true/false>}"""
+
+    user_msg = """ORIGINAL OCR TEXT:
+{ocr_text}
+
+GENERATED SUMMARY:
+{summary}"""
 
     try:
-        response = client.chat_completion(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            model="google/gemma-2-2b-it",
-            max_tokens=100,
-            temperature=0.1
-        )
+        llm = get_llm()
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_msg),
+            ("user", user_msg)
+        ])
+        chain = prompt | llm | StrOutputParser()
         
-        result_text = response.choices[0].message.content.strip()
+        result_text = chain.invoke({
+            "ocr_text": ocr_text,
+            "summary": summary
+        })
+        
+        result_text = result_text.strip()
         
         # Try to parse JSON from the response
         try:

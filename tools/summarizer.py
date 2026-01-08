@@ -1,12 +1,6 @@
-from huggingface_hub import InferenceClient
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-HF_API_KEY = os.getenv("HF_API_KEY")
-
-client = InferenceClient(token=HF_API_KEY)
+from tools.llm import get_llm
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 SYSTEM_PROMPT = """You are an expert literary analyst. Your task is to analyze book page text and extract key visual and narrative elements.
 
@@ -27,33 +21,19 @@ You must respond in the following structured format:
 Be specific and focus on visually representable details. If information is not available, make reasonable inferences based on context."""
 
 def summarize_page(ocr_text: str) -> str:
-    """Extract structured visual elements from book page text"""
+    """Extract structured visual elements from book page text using LangChain."""
     
     if not ocr_text or len(ocr_text.strip()) < 20:
         return "Insufficient text extracted from the image."
     
     try:
-        response = client.chat_completion(
-            messages=[
-                {
-                    "role": "system",
-                    "content": SYSTEM_PROMPT
-                },
-                {
-                    "role": "user",
-                    "content": f"""Analyze the following book page text and extract visual elements for illustration:
-
----
-{ocr_text}
----
-
-Provide your structured analysis:"""
-                }
-            ],
-            model="google/gemma-2-2b-it",
-            max_tokens=800,
-            temperature=0.4
-        )
-        return response.choices[0].message.content
+        llm = get_llm()
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", SYSTEM_PROMPT),
+            ("user", "Analyze the following book page text and extract visual elements for illustration:\n\n---\n{ocr_text}\n---\n\nProvide your structured analysis:")
+        ])
+        chain = prompt | llm | StrOutputParser()
+        
+        return chain.invoke({"ocr_text": ocr_text})
     except Exception as e:
         return f"Error during summarization: {str(e)}"

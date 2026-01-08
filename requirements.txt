@@ -4,6 +4,9 @@ pydantic
 python-multipart
 python-dotenv
 huggingface_hub
+langchain
+langchain-community
+langchain-huggingface
 pytesseract
 opencv-python
 Pillow

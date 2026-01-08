@@ -43,7 +43,8 @@ BookVision transforms book pages into thematic illustrations by combining optica
 - **Structured Scene Analysis**: LLM-powered extraction of visual elements, characters, settings, and mood
 - **Faithfulness Evaluation**: Automated quality scoring with hallucination detection before image generation
 - **Era-Aware Prompt Engineering**: Dynamic style mapping based on publication period for historically appropriate illustrations
-- **Failure-Aware Orchestration**: Graceful fallbacks at each pipeline stage with confidence tracking
+- **Agentic Workflow**: Orchestrated using **LangChain** and **LCEL** for robust pipeline management.
+- **Failure-Aware Orchestration**: Graceful fallbacks at each pipeline stage with confidence tracking.
 
 ---
 
@@ -55,8 +56,8 @@ BookVision transforms book pages into thematic illustrations by combining optica
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌──────────────┐     ┌──────────────┐     ┌──────────────────────────┐   │
-│   │   Frontend   │────▶│   Backend    │────▶│      Processing Pipeline │   │
-│   │  (Streamlit) │     │  (FastAPI)   │     │                          │   │
+│   │   Frontend   │────▶│   Backend    │────▶│  LangChain Agent    │   │
+│   │  (Streamlit) │     │  (FastAPI)   │     │    (LCEL Chain)     │   │
 │   └──────────────┘     └──────────────┘     │  1. OCR Extraction       │   │
 │                                              │  2. Book Context Lookup  │   │
 │                                              │  3. Page Summarization   │   │
@@ -73,7 +74,8 @@ BookVision transforms book pages into thematic illustrations by combining optica
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │  Book Page  │───▶│   OCR       │───▶│  Summarizer │───▶│  Prompt     │
-│   Image     │    │  (Tesseract)│    │  (Zephyr-7B)│    │  Generator  │
+│   Image     │    │  (Tesseract)│    │ (LCEL Chain)│    │  Generator  │
+│             │    │             │    │             │    │ (LCEL Chain)│
 └─────────────┘    └─────────────┘    └─────────────┘    └──────┬──────┘
                           │                   │                  │
                           ▼                   ▼                  │
@@ -99,11 +101,12 @@ BookVision transforms book pages into thematic illustrations by combining optica
 |-------|------------|---------|
 | Frontend | Streamlit | Interactive web interface for image upload and result display |
 | Backend | FastAPI + Uvicorn | Async REST API server handling pipeline orchestration |
+| Orchestration | LangChain (LCEL) | Manages the agentic workflow and tool execution |
 | OCR | Tesseract + OpenCV | Text extraction from book page images with confidence scoring |
 | Book Metadata | Open Library API | Retrieves author, genre, era, and book descriptions |
-| Summarization | Google Gemma-2-2B | Extracts visual elements and narrative from text |
-| Evaluation | Google Gemma-2-2B | Scores summary faithfulness, detects hallucinations |
-| Prompt Engineering | Google Gemma-2-2B | Refines scene descriptions into era-appropriate prompts |
+| Summarization | LangChain + Gemma-2-2B | Extracts visual elements and narrative from text |
+| Evaluation | LangChain + Gemma-2-2B | Scores summary faithfulness, detects hallucinations |
+| Prompt Engineering | LangChain + Gemma-2-2B | Refines scene descriptions into era-appropriate prompts |
 | Image Generation | Stable Diffusion XL | Produces high-quality book illustrations |
 
 ---
@@ -136,7 +139,7 @@ BOOKVISION/
 
 ### 1. OCR Module (`tools/ocr.py`)
 
-Extracts text from book page images using Tesseract OCR with confidence tracking.
+Extracts text from book page images using Tesseract OCR. Wrapped as a `RunnableLambda` func in the LangChain pipeline.
 
 **Process:**
 1. Loads image using OpenCV
@@ -170,7 +173,7 @@ Retrieves book metadata from Open Library API for context-aware generation.
 
 ### 3. Summarizer Module (`tools/summarizer.py`)
 
-Analyzes OCR text to extract structured visual elements using Google Gemma-2-2B LLM.
+Analyzes OCR text to extract structured visual elements. Implemented as a **LangChain Chain** using `ChatPromptTemplate`, `ChatHuggingFace` (Gemma-2B), and `StrOutputParser`.
 
 **Extracted Elements:**
 - **Scene Description:** 2-3 sentence narrative of what is happening
@@ -186,7 +189,7 @@ Analyzes OCR text to extract structured visual elements using Google Gemma-2-2B 
 
 ### 4. Evaluation Module (`evaluation/evaluation.py`)
 
-Assesses summary quality using LLM-based faithfulness evaluation.
+Assesses summary quality. Implemented as a **LangChain Chain** with custom JSON parsing logic.
 
 **Metrics:**
 - **Faithfulness Score (1-5):** How accurately the summary reflects the source text
@@ -215,7 +218,8 @@ The prompt generation pipeline is the core intelligence layer that transforms st
                                                          │
 ┌─────────────────┐     ┌─────────────────┐              │
 │  Page Summary   │────▶│  LLM Prompt     │◀─────────────┘
-│  (Summarizer)   │     │  Refinement     │
+│  (Summarizer)   │     │  (LangChain)    │
+│                 │     │                 │
 └─────────────────┘     └────────┬────────┘
                                  │
                                  ▼
@@ -253,7 +257,7 @@ Maps publication year to historically appropriate artistic styles:
 
 #### Step 3: LLM Prompt Refinement
 
-The Gemma-2-2B model acts as an art director, receiving:
+The Gemma-2-2B model (via `ChatHuggingFace`) acts as an art director, receiving:
 - Scene summary from the summarizer
 - Book metadata (title, author, year, genre)
 - Recommended era style
@@ -417,6 +421,7 @@ Processes a book page image through the full pipeline.
 Core dependencies from `requirements.txt`:
 
 - **fastapi, uvicorn** - Backend API server
+- **langchain, langchain-huggingface** - Agent orchestration and LLM integration
 - **streamlit** - Frontend web interface
 - **pytesseract, opencv-python** - OCR processing
 - **huggingface_hub** - LLM and image generation API

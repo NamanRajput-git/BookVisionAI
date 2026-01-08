@@ -1,12 +1,6 @@
-from huggingface_hub import InferenceClient
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-HF_API_KEY = os.getenv("HF_API_KEY")
-client = InferenceClient(token=HF_API_KEY)
-
+from tools.llm import get_llm
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 def extract_book_metadata(book_context: str) -> dict:
     """Extract structured metadata from Open Library context."""
@@ -60,12 +54,7 @@ def refine_prompt_with_llm(scene_summary: str, book_context: str, metadata: dict
     
     era_style = get_era_style(metadata.get("year", ""))
     
-    try:
-        response = client.chat_completion(
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are an expert art director creating image prompts for book illustrations.
+    system_msg = """You are an expert art director creating image prompts for book illustrations.
 Your task is to convert a scene description into a detailed visual prompt that:
 1. Preserves the literary theme and mood of the book
 2. Uses period-appropriate visual style
@@ -73,27 +62,35 @@ Your task is to convert a scene description into a detailed visual prompt that:
 4. Avoids inventing details not in the scene
 
 Output ONLY the refined prompt, no explanations."""
-                },
-                {
-                    "role": "user",
-                    "content": f"""Create an illustration prompt for this scene:
 
-BOOK: {metadata.get('title', 'Unknown')} by {metadata.get('author', 'Unknown')}
-ERA: {metadata.get('year', 'Unknown')}
-GENRE: {metadata.get('genre', 'Literary Fiction')}
+    user_msg = """Create an illustration prompt for this scene:
+
+BOOK: {title} by {author}
+ERA: {year}
+GENRE: {genre}
 RECOMMENDED STYLE: {era_style}
 
 SCENE TO ILLUSTRATE:
 {scene_summary}
 
 Generate a detailed, visual prompt that captures the essence of this scene while staying true to the book's era and theme."""
-                }
-            ],
-            model="google/gemma-2-2b-it",
-            max_tokens=400,
-            temperature=0.5
-        )
-        return response.choices[0].message.content
+
+    try:
+        llm = get_llm()
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_msg),
+            ("user", user_msg)
+        ])
+        chain = prompt | llm | StrOutputParser()
+        
+        return chain.invoke({
+            "title": metadata.get('title', 'Unknown'),
+            "author": metadata.get('author', 'Unknown'),
+            "year": metadata.get('year', 'Unknown'),
+            "genre": metadata.get('genre', 'Literary Fiction'),
+            "era_style": era_style,
+            "scene_summary": scene_summary
+        })
     except Exception as e:
         print(f"LLM refinement failed: {e}")
         return None
@@ -137,8 +134,3 @@ ATMOSPHERE: Faithful to the literary source, emotionally resonant
 QUALITY: professional book illustration, sharp details, rich textures"""
 
     return final_prompt.strip()
-
-
-def validate_prompt(prompt: str, page_summary: str) -> bool:
-    """Validates prompt is correctly formatted."""
-    return "SCENE" in prompt or "illustration" in prompt.lower()

@@ -14,8 +14,8 @@ This document covers potential interview questions ranging from project-specific
 3.  First, **Tesseract OCR** extracts the text.
 4.  Then, we fetch external metadata (author/genre) using the **Open Library API**.
 5.  An **LLM (Gemma-2b)** summarizes the scene and evaluates its own faithfulness to the original text.
-6.  Finally, a **Prompt Engineering** module combines the summary and style data to generate an image using **Stable Diffusion XL**.
-7.  The result is returned as a JSON object containing the image and confidence metrics."
+6.  **Orchestration**: `agent.py` uses **LangChain (LCEL)** to pass data between these steps in a structured pipeline.
+7.  Finally, the agent returns a JSON object with the generated image and metrics."
 
 ### Q2: Why did you separate the Frontend and Backend? Why not just one Streamlit app?
 **Answer:**
@@ -89,15 +89,28 @@ This document covers potential interview questions ranging from project-specific
 *   **A**: LLMs don't read words; they read tokens (chunks of characters). ~1000 tokens is roughly 750 words. This is important for cost (API pricing) and context limits.
 
 ### 2. LangChain & Agents
-*(Even if you didn't strictly use LangChain, these are common questions)*
+*(How this project uses LangChain)*
 
-**Q: What is a "Chain" vs. an "Agent" in LangChain?**
+**Q: How is LangChain used in this project?**
+*   **A**: I used **LangChain Expression Language (LCEL)** to orchestrate the pipeline. By composing `Runnables` (like `chain = extract | summarize | evaluate`), I created a readable, declarative workflow. I also used `ChatHuggingFace` to interface with instruction-tuned models like Gemma-2b.
+
+**Q: What is a "Runnable" in LangChain?**
+*   **A**: A `Runnable` is the core unit of work in LangChain. Everything—prompts, models, output parsers—is a Runnable. They all implement a standard interface:
+    *   `invoke()`: Run on a single input.
+    *   `batch()`: Run on a list of inputs (parallelized).
+    *   `stream()`: Stream output chunks (useful for chatbots).
+    *   In my project, my entire agent pipeline is technically one big Runnable.
+
+**Q: Explain LCEL Primitives: `RunnablePassthrough` and `RunnableLambda`.**
 *   **A**:
-    *   **Chain**: A hardcoded sequence of steps (e.g., Input -> Prompt -> LLM -> Output). My `run_agent` function acts like a custom Chain.
-    *   **Agent**: An LLM that uses *Tools* to decide what to do next. It has a reasoning loop (ReAct: Reason + Act). For example, an Agent might decide *whether* to search Google or check a database based on the user's question.
+    *   **RunnablePassthrough**: It allows data to pass through uncahnged or adds new keys to the dictionary. I used `RunnablePassthrough.assign()` to add the "book_context" to the state without losing the original "ocr_text".
+    *   **RunnableLambda**: Wraps a standard Python function (like my `ocr.extract_text` or `image_gen.generate`) into a LangChain-compatible Runnable so it can be used in a pipe (`|`).
 
-**Q: What is "Memory" in LLM apps?**
-*   **A**: LLMs are stateless (they forget the previous message). "Memory" is just a mechanism to store the conversation history (e.g., in a list) and re-feed it into the prompt for the next turn so the AI "remembers" context.
+**Q: What is the difference between `SystemMessage` and `HumanMessage`?**
+*   **A**:
+    *   **SystemMessage**: High-level instructions that define the AI's behavior/persona (e.g., "You are an expert art director..."). This is usually static.
+    *   **HumanMessage**: The dynamic user input or data (e.g., "Analyze this text: [OCR CONTENT]").
+    *   Separating these ensures the model treats instructions differently from data, preventing prompt injection and improving adherence to rules.
 
 ### 3. Machine Learning Fundamentals
 **Q: Explain Precision vs. Recall in the context of your Hallucination detection.**

@@ -13,13 +13,13 @@ The project follows a **Microservice-like Architecture** separating the User Int
 
 ### High-Level Data Flow:
 1.  **Input**: User uploads an image of a book page via **Streamlit**.
-2.  **Orchestration**: Streamlit sends the image to the **FastAPI Backend**.
+2.  **Orchestration**: Streamlit sends the image to the **FastAPI Backend**, which triggers the **LangChain Agent** (`app/agent.py`).
 3.  **Processing Pipeline**:
-    *   **OCR (Tesseract)**: Extracts raw text and confidence scores.
-    *   **Context Retrieval (Open Library API)**: Fetches book metadata (Year, Genre, Author Style).
-    *   **Summarization (LLM - Gemma-2-2b)**: Condenses text into key visual elements (Components, Action, Mood).
-    *   **Evaluation (LLM)**: Checks the summary against raw text for faithfulness (Hallucination detection).
-    *   **Prompt Engineering (LLM)**: Merges Summary + Book Style + Artistic Modifiers into a Stable Diffusion prompt.
+    *   **OCR (Tesseract)**: Extracts raw text. Wrapped as a runnable tool.
+    *   **Context Retrieval (Open Library API)**: Fetches book metadata.
+    *   **Summarization (LangChain Chain)**: `ChatHuggingFace` model (Gemma-2b) condenses text into visual elements.
+    *   **Evaluation (LangChain Chain)**: A second chain checks the summary against raw text for hallucinations.
+    *   **Prompt Engineering (LangChain Chain)**: Merges Summary + Book Style + Artistic Modifiers.
     *   **Generation (SDXL)**: Generates the final image.
 4.  **Output**: JSON response with image (Base64) and metrics returns to frontend.
 
@@ -52,7 +52,8 @@ The project follows a **Microservice-like Architecture** separating the User Int
 
 ### 1. OCR Engine (`tools/ocr.py`)
 *   **Tech**: Tesseract 5 (via `pytesseract`) + OpenCV.
-*   **Preprocessing**: Uses OpenCV for grayscale conversion and thresholding to improve accuracy on old/yellowed pages.
+*   **Role in Chain**: Acts as a **System Tool** that feeds text into the Summarization Chain.
+*   **Preprocessing**: Uses OpenCV for grayscale conversion.
 *   **Confidence Tracking**: Returns a confidence score (0-100). If low (<40%), the system warns the user.
 
 ### 2. Context Agent (`tools/web_search.py`)
@@ -61,7 +62,7 @@ The project follows a **Microservice-like Architecture** separating the User Int
 *   **Fallback**: If API fails, it defaults to a neutral style rather than crashing.
 
 ### 3. Prompt Engineer (`tools/prompt_generator.py`)
-*   **Tech**: HuggingFace Inference Client (`google/gemma-2-2b-it`).
+*   **Tech**: LangChain Chain (`ChatPromptTemplate` + `ChatHuggingFace`).
 *   **Algorithm**:
     1.  **Era Mapping**: Maps publication years to art styles (e.g., 1800-1850 -> "Romanticism, oil painting").
     2.  **Style Injection**: Appends high-quality modifiers ("4k", "detailed", "cinematic lighting").
@@ -99,8 +100,8 @@ Most candidates build simple wrappers around LLM APIs (e.g., "Chat with PDF" or 
     *   *Standard Project*: Generates a generic scene.
     *   *BookVision*: Fetches the book's year and genre. It knows that "Sherlock Holmes" (1887) should look like an "Oil Painting" or "Etching," not a "Cyberpunk" render. It grounds the AI's creativity in real-world metadata.
 
-3.  **Agentic Workflow**:
-    *   It's not a single call. It's a chain of tools: OCR Tool -> Web Search Tool -> Summarizer Tool -> Evaluator Tool -> Image Gen Tool. This demonstrates understanding of **Agentic AI Systems**.
+3.  **Composable Architecture (LCEL)**:
+    *   Instead of a monolithic script, I used **LangChain Expression Language**. The pipeline is composed of reusable functional units: `chain = extract | summarize | evaluate`. This makes testing and swapping components (like changing the LLM) trivial.
 
 ---
 
