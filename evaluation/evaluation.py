@@ -43,10 +43,7 @@ GENERATED SUMMARY:
         })
         
         result_text = result_text.strip()
-        
-        # Try to parse JSON from the response
         try:
-            # Find JSON in the response
             start = result_text.find('{')
             end = result_text.rfind('}') + 1
             if start != -1 and end > start:
